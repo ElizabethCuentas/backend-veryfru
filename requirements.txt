@@ -1,0 +1,12 @@
+fastapi==0.100.0
+uvicorn[standard]==0.22.0
+asyncpg==0.27.0
+cx_oracle==8.2
+python-dotenv
+psycopg2-binary
+pydantic
+pytz
+requests
+python-multipart
+boto3
+botocore
