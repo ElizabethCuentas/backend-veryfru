@@ -33,7 +33,7 @@ class PedidoCreate(BaseModel):
     total: Optional[Union[str, int]] = Field(default=None, alias="total")
 
     class Config:
-        allow_population_by_field_name = True
+        validate_by_name = True
 
     @field_validator("id_producto", "precio", "cantidad", "total", mode="before")
     @classmethod
@@ -100,11 +100,12 @@ async def delete_item():
 @app.post("/crear_pedido", status_code=200)
 async def crear_pedido(payload: Any = Body(...)):
     try:
-        print(payload)
         if isinstance(payload, dict) and "items" in payload:
             items_raw = payload["items"]
+            total_payload = payload.get("total")
         elif isinstance(payload, list):
             items_raw = payload
+            total_payload = None
         else:
             raise HTTPException(
                 status_code=400,
@@ -112,24 +113,31 @@ async def crear_pedido(payload: Any = Body(...)):
             )
 
         inserted = []
+        if total_payload is None:
+            raise HTTPException(status_code=400, detail="El campo total es requerido")
+
+        pedido_row = await db.insert_one("pedidos", {"total": str(total_payload)})
+        if pedido_row is None:
+            raise HTTPException(status_code=500, detail="No se pudo crear el pedido")
+        pedido_id = pedido_row["id_pedidos"]
+
         for el in items_raw:
             p = PedidoCreate.parse_obj(el)
             data = p.dict(by_alias=False, exclude_none=True)
-            row = await db.insert_one("pedidos", data)
+            data["id_pedido"] = pedido_id
+            row = await db.insert_one("pedido_items", data)
             if row is None:
                 raise HTTPException(
                     status_code=500,
-                    detail="No se pudo insertar uno de los pedidos"
+                    detail="No se pudo insertar uno de los items"
                 )
             inserted.append(dict(row))
 
-        return inserted
+        return {"id_pedido": pedido_id}
 
     except ValueError as e:
-        print(e)
         raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
         raise
     except Exception as e:
-        print(e)
         raise HTTPException(status_code=400, detail=str(e))
