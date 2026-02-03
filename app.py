@@ -1,23 +1,20 @@
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
-from typing import Dict, Any, List, Optional, Union
+from typing import Any, Optional, Union
 from pydantic import BaseModel, Field, field_validator
 import db
+import os
 
-app = FastAPI(title="Proyecto FastAPI simple")
+app = FastAPI(title="Veryfruity Backend API", version="1.0.0")
 
 # Habilitar CORS para permitir preflight desde el frontend (ajusta `allow_origins` en producción)
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=["*"],
+    allow_origins=[o.strip() for o in os.getenv("CORS_ORIGINS", "*").split(",") if o.strip()],
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
-
-# Almacenamiento en memoria sencillo (sin models)
-items: Dict[int, Dict[str, Any]] = {}
-
 
 class ProductoCreate(BaseModel):
     nombre: str 
@@ -51,6 +48,14 @@ async def on_startup():
 @app.on_event("shutdown")
 async def on_shutdown():
     await db.close_db()
+
+@app.get("/", status_code=200)
+async def root():
+    return {"status": "ok"}
+
+@app.get("/health", status_code=200)
+async def health():
+    return {"status": "ok"}
 
 @app.get("/productos")
 async def get_productos():
@@ -90,7 +95,6 @@ async def cargue_producto(payload: Any = Body(...)):
                 detail="Payload inválido: espere un array o {items: [...]}"
             )
 
-        inserted = []
         for el in items_raw:
             p = ProductoCreate.parse_obj(el)
             data = p.dict(by_alias=False, exclude_none=True)
@@ -100,7 +104,6 @@ async def cargue_producto(payload: Any = Body(...)):
                     status_code=500,
                     detail="No se pudo insertar uno de los productos"
                 )
-            inserted.append(dict(row))
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
@@ -129,7 +132,6 @@ async def crear_pedido(payload: Any = Body(...)):
                 detail="Payload inválido: espere un array o {items: [...]}"
             )
 
-        inserted = []
         if total_payload is None:
             raise HTTPException(status_code=400, detail="El campo total es requerido")
 
@@ -148,7 +150,6 @@ async def crear_pedido(payload: Any = Body(...)):
                     status_code=500,
                     detail="No se pudo insertar uno de los items"
                 )
-            inserted.append(dict(row))
 
         return {"id_pedido": pedido_id}
 
@@ -158,3 +159,14 @@ async def crear_pedido(payload: Any = Body(...)):
         raise
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    uvicorn.run(
+        "app:app",
+        host=os.getenv("HOST", "0.0.0.0"),
+        port=int(os.getenv("PORT", "8000")),
+        reload=False,
+    )

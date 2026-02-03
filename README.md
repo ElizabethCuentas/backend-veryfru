@@ -1,18 +1,44 @@
 # Proyecto FastAPI simple
 
-Este es un proyecto mínimo de FastAPI sin modelos (almacenamiento en memoria).
+Backend de FastAPI conectado a PostgreSQL (asyncpg) para productos y pedidos.
 
-Comandos rápidos:
+## Desarrollo local
+
+Comandos rapidos:
 
 ```powershell
 pip install -r requirements.txt
+$env:PYTHON_ENV="development"
+$env:PORT="8000"
+$env:DATABASE_URL="postgresql://usuario:password@host:5432/dbname"
 uvicorn app:app --reload
 ```
 
-Endpoints disponibles:
+## Endpoints disponibles
 
-- `GET /` - Mensaje de bienvenida
-- `GET /items/{item_id}` - Obtener item
-- `POST /items/{item_id}` - Crear item (body JSON libre)
-- `PUT /items/{item_id}` - Actualizar item (body JSON libre)
-- `DELETE /items/{item_id}` - Eliminar item
+- `GET /` - Health basico
+- `GET /health` - Health basico
+- `GET /productos` - Lista de productos
+- `POST /cargue_producto` - Crear productos (array o `{items: [...]}`)
+- `DELETE /eliminar_productos` - Eliminar todos los productos
+- `GET /pedidos` - Lista de pedidos
+- `GET /pedido_detalle/{id_pedido}` - Detalle de pedido
+- `POST /crear_pedido` - Crear pedido (requiere `total`)
+
+## Deploy en Render
+
+Este repo incluye `render.yaml` para desplegar como servicio web.
+
+Pasos:
+
+1. En Render, crea un servicio desde este repo.
+2. Render leera¡ `render.yaml` y usara¡:
+   - `buildCommand`: `pip install -r requirements.txt`
+   - `startCommand`: `uvicorn app:app --host 0.0.0.0 --port $PORT`
+3. Configura las variables de entorno en el dashboard:
+   - `DATABASE_URL` (obligatoria)
+   - `CORS_ORIGINS` (opcional, por defecto `*`)
+
+## Variables locales
+
+Este proyecto carga automÃ¡ticamente variables desde `.env` usando `python-dotenv`.

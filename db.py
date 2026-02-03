@@ -2,13 +2,13 @@ import os
 from typing import Any, List, Optional
 import asyncpg
 import re
+from dotenv import load_dotenv
 
-# URL por defecto (se puede sobrescribir con la variable de entorno DATABASE_URL)
-DEFAULT_DATABASE_URL = (
-    "postgresql://neondb_owner:npg_Pc72IBEAMVHJ@ep-jolly-rice-ah65ictq-pooler.c-3.us-east-1.aws.neon.tech/neondb?sslmode=require&channel_binding=require"
-)
+load_dotenv()
 
-DATABASE_URL = os.getenv("DATABASE_URL", DEFAULT_DATABASE_URL)
+DATABASE_URL = os.getenv("DATABASE_URL")
+if not DATABASE_URL:
+    raise RuntimeError("DATABASE_URL no esta configurada")
 
 pool: Optional[asyncpg.pool.Pool] = None
 
