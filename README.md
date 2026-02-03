@@ -27,12 +27,12 @@ uvicorn app:app --reload
 
 ## Deploy en Render
 
-Este repo incluye `render.yaml` para desplegar como servicio web.
+Este repo incluye `render.yaml` para desplegar como servicio web y `runtime.txt` para fijar Python 3.11 (necesario para `asyncpg`).
 
 Pasos:
 
 1. En Render, crea un servicio desde este repo.
-2. Render leera¡ `render.yaml` y usara¡:
+2. Render leera `render.yaml` y usara:
    - `buildCommand`: `pip install -r requirements.txt`
    - `startCommand`: `uvicorn app:app --host 0.0.0.0 --port $PORT`
 3. Configura las variables de entorno en el dashboard:
@@ -41,4 +41,4 @@ Pasos:
 
 ## Variables locales
 
-Este proyecto carga automÃ¡ticamente variables desde `.env` usando `python-dotenv`.
+Este proyecto carga automaticamente variables desde `.env` usando `python-dotenv`.
