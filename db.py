@@ -66,3 +66,9 @@ async def insert_one(table: str, payload: dict) -> Optional[asyncpg.Record]:
     values = list(payload.values())
     query = f"INSERT INTO {table} ({columns_sql}) VALUES ({placeholders}) RETURNING *"
     return await fetchrow(query, *values)
+
+async def delete(table:str) -> str:
+    if not _is_valid_identifier(table):
+        raise ValueError("nombre de tabla inválido")
+    query = f"TRUNCATE TABLE {table} RESTART IDENTITY"
+    return await execute(query)

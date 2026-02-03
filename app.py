@@ -37,21 +37,14 @@ async def on_startup():
 async def on_shutdown():
     await db.close_db()
 
-
-@app.get("/")
-async def root():
-    return {"message": "API FastAPI simple"}
-
-
 @app.get("/productos")
 async def get_productos():
-    rows = await db.fetch("SELECT nombre, precio, unidad FROM productos")
+    rows = await db.fetch("SELECT * FROM productos")
     return [dict(r) for r in rows]
 
 
 @app.post("/cargue_producto", status_code=200)
 async def cargue_producto(payload: Any = Body(...)):
-    print("Payload recibido:", payload)
     try:
         if isinstance(payload, dict) and "items" in payload:
             items_raw = payload["items"]
@@ -84,34 +77,7 @@ async def cargue_producto(payload: Any = Body(...)):
     except Exception as e:
         raise HTTPException(status_code=400, detail=str(e))
 
-
-@app.get("/items/{item_id}")
-async def get_item(item_id: int):
-    item = items.get(item_id)
-    if item is None:
-        raise HTTPException(status_code=404, detail="Item no encontrado")
-    return {"item_id": item_id, "item": item}
-
-
-@app.post("/items/{item_id}")
-async def create_item(item_id: int, payload: dict):
-    if item_id in items:
-        raise HTTPException(status_code=400, detail="Item ya existe")
-    items[item_id] = payload
-    return {"item_id": item_id, "item": payload}
-
-
-@app.put("/items/{item_id}")
-async def update_item(item_id: int, payload: dict):
-    if item_id not in items:
-        raise HTTPException(status_code=404, detail="Item no encontrado")
-    items[item_id] = payload
-    return {"item_id": item_id, "item": payload}
-
-
-@app.delete("/items/{item_id}")
-async def delete_item(item_id: int):
-    if item_id not in items:
-        raise HTTPException(status_code=404, detail="Item no encontrado")
-    del items[item_id]
-    return {"detail": "Eliminado"}
+@app.delete("/eliminar_productos", status_code=200)
+async def delete_item():
+    await db.delete("productos")
+    return {"detail": "Productos eliminados"}
