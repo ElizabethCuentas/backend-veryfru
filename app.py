@@ -1,7 +1,7 @@
 from fastapi import FastAPI, HTTPException, Body
 from fastapi.middleware.cors import CORSMiddleware
 from typing import Any, Optional, Union
-from pydantic import BaseModel, Field, field_validator
+from pydantic import BaseModel, Field, validator
 import db
 import os
 
@@ -32,8 +32,7 @@ class PedidoCreate(BaseModel):
     class Config:
         validate_by_name = True
 
-    @field_validator("id_producto", "precio", "cantidad", "total", mode="before")
-    @classmethod
+    @validator("id_producto", "precio", "cantidad", "total", pre=True)
     def _coerce_to_str(cls, v):
         if v is None:
             return v
