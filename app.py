@@ -83,8 +83,6 @@ async def cargue_producto(payload: Any = Body(...)):
                 )
             inserted.append(dict(row))
 
-        return inserted
-
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
     except HTTPException:
