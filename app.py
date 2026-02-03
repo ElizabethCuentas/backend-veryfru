@@ -57,6 +57,25 @@ async def get_productos():
     rows = await db.fetch("SELECT * FROM productos")
     return [dict(r) for r in rows]
 
+@app.get("/pedidos")
+async def get_pedidos():
+    rows = await db.fetch("SELECT id_pedidos, total FROM pedidos")
+    return [dict(r) for r in rows]
+
+@app.get("/pedido_detalle/{id_pedido}", status_code=200)
+async def get_pedido_detalle(id_pedido: int):
+    try:
+        if id_pedido is None:
+            raise HTTPException(status_code=400, detail="El campo id_pedido es requerido")
+
+        rows = await db.fetch(
+            "SELECT producto, precio, cantidad, unidad, observaciones FROM pedido_items WHERE id_pedido = $1", id_pedido
+        )
+        return [dict(r) for r in rows]
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
 
 @app.post("/cargue_producto", status_code=200)
 async def cargue_producto(payload: Any = Body(...)):
