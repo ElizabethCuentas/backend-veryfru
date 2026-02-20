@@ -38,6 +38,10 @@ class PedidoCreate(BaseModel):
             return v
         return str(v)
 
+class LoginRequest(BaseModel):
+    username: str
+    password: str
+
 
 @app.on_event("startup")
 async def on_startup():
@@ -154,6 +158,22 @@ async def crear_pedido(payload: Any = Body(...)):
 
     except ValueError as e:
         raise HTTPException(status_code=400, detail=str(e))
+    except HTTPException:
+        raise
+    except Exception as e:
+        raise HTTPException(status_code=400, detail=str(e))
+
+@app.post("/login", status_code=200)
+async def login(payload: LoginRequest):
+    try:
+        user = await db.fetchrow(
+            'SELECT username FROM users WHERE username = $1 AND password = $2',
+            payload.username,
+            payload.password,
+        )
+        if user is None:
+            raise HTTPException(status_code=401, detail="Credenciales inválidas")
+        return {"authenticated": True, "username": user["username"]}
     except HTTPException:
         raise
     except Exception as e:
